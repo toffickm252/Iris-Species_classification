@@ -1,33 +1,52 @@
 import streamlit as st
-import pickle
 import numpy as np
+import pickle
+import os
 
-# Load the trained model (adjust path if needed)
-# model = joblib.load('C:\\Users\\Surface\\OneDrive\\Documentos\\GitHub\\Iris-Species_classification\\models\\svm_model.pkl')
-import os # Make sure os is imported
-# Construct a relative path to the model file
-model_path = os.path.join(os.path.dirname(__file__), '..', 'models', 'svm_model.pkl')
-with open(model_path, 'rb') as file:
-    model = pickle.load(file)
+# -----------------------------
+# Load Model
+# -----------------------------
+def load_model():
+    base_dir = os.path.dirname(__file__)
+    model_file = os.path.join(base_dir, "..", "models", "svm_model.pkl")
+
+    try:
+        with open(model_file, "rb") as f:
+            return pickle.load(f)
+    except FileNotFoundError:
+        st.error("Model file not found. Check the folder structure.")
+        st.stop()
+    except Exception as e:
+        st.error(f"Error loading model: {e}")
+        st.stop()
 
 
-st.title('Iris Flower Classification')
+model = load_model()
 
-st.sidebar.header('Input Features')
+# -----------------------------
+# UI Layout
+# -----------------------------
+st.title("Iris Flower Classification")
 
-# Note: Model is trained on only sepal length and width; using only those for prediction
-sepal_length = st.sidebar.slider('Sepal Length (cm)', 4.0, 8.0, 5.4)
-sepal_width = st.sidebar.slider('Sepal Width (cm)', 2.0, 4.5, 3.4)
-# petal_length = st.sidebar.slider('Petal Length (cm)', 1.0, 7.0, 1.3)  # Commented out since model doesn't use it
-# petal_width = st.sidebar.slider('Petal Width (cm)', 0.1, 2.5, 0.2)    # Commented out since model doesn't use it
+st.sidebar.header("Input Features")
+sepal_length = st.sidebar.slider("Sepal Length (cm)", 4.0, 8.0, 5.4)
+sepal_width = st.sidebar.slider("Sepal Width (cm)", 2.0, 4.5, 3.4)
 
-if st.button('Predict'):
-    # Use only sepal length and width (2 features)
-    input_data = np.array([[sepal_length, sepal_width]])
-    prediction = model.predict(input_data)
-    
-    # Map numerical prediction to Iris species names
-    iris_species = {0: 'Setosa', 1: 'Versicolor', 2: 'Virginica'}
-    predicted_species = iris_species[prediction[0]]
-    
-    st.success(f'The predicted Iris species is: **{predicted_species}**')
+# -----------------------------
+# Prediction Logic
+# -----------------------------
+def predict_species(length, width):
+    data = np.array([[length, width]])
+    prediction = model.predict(data)[0]
+
+    species_map = {
+        0: "Setosa",
+        1: "Versicolor",
+        2: "Virginica"
+    }
+    return species_map.get(prediction, "Unknown")
+
+
+if st.button("Predict"):
+    species = predict_species(sepal_length, sepal_width)
+    st.success(f"Predicted species: **{species}**")
