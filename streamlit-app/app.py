@@ -1,5 +1,5 @@
 import streamlit as st
-import joblib
+import pickle
 import numpy as np
 
 # Load the trained model (adjust path if needed)
@@ -7,7 +7,8 @@ import numpy as np
 import os # Make sure os is imported
 # Construct a relative path to the model file
 model_path = os.path.join(os.path.dirname(__file__), '..', 'models', 'svm_model.pkl')
-model = joblib.load(model_path)
+with open(model_path, 'rb') as file:
+    model = pickle.load(file)
 
 st.title('Iris Flower Classification')
 
